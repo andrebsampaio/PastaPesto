@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">PastaPesto</string>
+    <string name="title_activity_game_over">GameOver</string>
 </resources>

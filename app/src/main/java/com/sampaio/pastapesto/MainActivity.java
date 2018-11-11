@@ -19,12 +19,13 @@ public class MainActivity extends AppCompatActivity {
     private TextToSpeech mTTS;
     private static final String TTS_TAG = "TTS";
     private TextView mNewWord;
+    private TextView mTotalPoints;
     private static final String[] availableWords = new String[]{"Pasta", "Pesto"};
-    private static final boolean FIRST = true;
-    private static final boolean SECOND = false;
-    private Stack<Boolean> mWordStack;
-    private boolean currentWord;
-    private int totalPoints;
+    private static final int FIRST = 0;
+    private static final int SECOND = 1;
+    private Stack<Integer> mWordStack;
+    private int currentWord;
+    private int pointCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mWordStack = new Stack<>();
         mNewWord = findViewById(R.id.next_word);
+        mTotalPoints = findViewById(R.id.total_points);
         showNextWord();
         mTTS = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
@@ -54,21 +56,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void pastaClicked(View view) {
-        if(checkIfCorrect(FIRST)){
-            say(availableWords[0]);
-        } else {
-            youLose();
-        }
-        showNextWord();
+        wordClicked(FIRST);
     }
 
     public void pestoClicked(View view) {
-        if(checkIfCorrect(SECOND)){
-            say(availableWords[1]);
-        } else {
-            youLose();
-        }
-        showNextWord();
+        wordClicked(SECOND);
 
     }
 
@@ -81,8 +73,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void generateNextWords(){
-        boolean newWord = Math.round(Math.random()) > 0 ? true : false;
-        mWordStack.push(!newWord);
+        int newWord = (int)Math.round(Math.random());
+        mWordStack.push(newWord == FIRST ? SECOND : FIRST);
         mWordStack.push(newWord);
     }
 
@@ -91,16 +83,36 @@ public class MainActivity extends AppCompatActivity {
             generateNextWords();
         }
         currentWord = mWordStack.pop();
-        mNewWord.setText(availableWords[currentWord ? 0 : 1]);
+        mNewWord.setText(availableWords[currentWord]);
     }
 
-    private boolean checkIfCorrect(boolean clicked){
+    private boolean checkIfCorrect(int clicked){
         return clicked == currentWord;
     }
 
     private void youLose(){
         say("YOU LOSE BITCH, MAMA MIA");
         mWordStack = new Stack<>();
+        Intent gameOver = new Intent();
+        gameOver.putExtra("score_key", pointCount);
+        gameOver.setClass(this,GameOver.class);
+        pointCount = 0;
+        startActivity(gameOver);
+    }
+
+    private void wordClicked(int index){
+        if(checkIfCorrect(index)){
+            say(availableWords[index]);
+            pointCount++;
+        } else {
+            youLose();
+        }
+        updatePoints(pointCount);
+        showNextWord();
+    }
+
+    private void updatePoints(int newPoints){
+        mTotalPoints.setText(String.valueOf(newPoints));
     }
 
 
